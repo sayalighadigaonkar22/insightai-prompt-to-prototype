@@ -1,0 +1,7 @@
+{
+  "name": "InsightAI - Professional Growth Assistant",
+  "description": "A professional AI assistant providing structured guidance for personal, career, and business decisions through the 'Understand, Grow, Act' framework.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

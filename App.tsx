@@ -22,13 +22,11 @@ const App: React.FC = () => {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const stats = useMemo(() => {
-    return {
-      personal: history.filter(h => h.response.context === 'Personal').length,
-      career: history.filter(h => h.response.context === 'Career').length,
-      business: history.filter(h => h.response.context === 'Business').length,
-    };
-  }, [history]);
+  const stats = useMemo(() => ({
+    personal: history.filter(h => h.response.context === 'Personal').length,
+    career: history.filter(h => h.response.context === 'Career').length,
+    business: history.filter(h => h.response.context === 'Business').length,
+  }), [history]);
 
   const triggerAnalysis = async (customInput?: string, customContext?: ContextType) => {
     const textToUse = customInput || input;
@@ -65,12 +63,6 @@ const App: React.FC = () => {
     triggerAnalysis(text, context);
   };
 
-  const navigateToContext = (context: ContextType) => {
-    setContextType(context);
-    setActiveTab('analyze');
-    clearInput();
-  };
-
   const clearInput = () => {
     setInput('');
     setImagePreview(null);
@@ -83,75 +75,57 @@ const App: React.FC = () => {
       <div className="bg-gradient-to-br from-slate-900 to-blue-900 rounded-3xl p-10 text-white shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 opacity-10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
         <div className="relative z-10">
-          <h2 className="text-4xl font-extrabold mb-3">Welcome to InsightAI</h2>
+          <h2 className="text-4xl font-extrabold mb-3 text-balance">Professional Intelligence. Simplified.</h2>
           <p className="opacity-80 max-w-xl text-lg leading-relaxed font-light">
-            Your personal hub for career growth, business strategy, and personal document management. 
-            How can we assist you today?
+            Insights for personal paperwork, career trajectories, and business strategy.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <button 
-          onClick={() => navigateToContext('Personal')}
-          className="bg-white p-7 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 hover:border-amber-400 hover:shadow-xl transition-all text-left group"
-        >
-          <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📄</div>
-          <div>
-            <div className="text-3xl font-black text-slate-800">{stats.personal}</div>
-            <div className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-1">Personal Documents</div>
-            <p className="text-xs text-slate-400 mt-2">Manage bank notices, KYC, and government forms.</p>
-          </div>
-        </button>
-
-        <button 
-          onClick={() => navigateToContext('Career')}
-          className="bg-white p-7 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 hover:border-emerald-400 hover:shadow-xl transition-all text-left group"
-        >
-          <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🌱</div>
-          <div>
-            <div className="text-3xl font-black text-slate-800">{stats.career}</div>
-            <div className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-1">Career / Skills</div>
-            <p className="text-xs text-slate-400 mt-2">Analyze resumes, job posts, and skill development.</p>
-          </div>
-        </button>
-
-        <button 
-          onClick={() => navigateToContext('Business')}
-          className="bg-white p-7 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 hover:border-blue-400 hover:shadow-xl transition-all text-left group"
-        >
-          <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">💡</div>
-          <div>
-            <div className="text-3xl font-black text-slate-800">{stats.business}</div>
-            <div className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-1">Business Actions</div>
-            <p className="text-xs text-slate-400 mt-2">Strategic advice for negotiations and business risks.</p>
-          </div>
-        </button>
+        {[
+          { id: 'Personal', label: 'Personal Papers', icon: '📄', count: stats.personal, color: 'hover:border-amber-400', desc: 'Bank notices, KYC, ID forms' },
+          { id: 'Career', label: 'Career Growth', icon: '🌱', count: stats.career, color: 'hover:border-emerald-400', desc: 'Resumes, Skill gaps, Interviews' },
+          { id: 'Business', label: 'Business Strategy', icon: '💡', count: stats.business, color: 'hover:border-blue-400', desc: 'Negotiations, Invoices, Risk' }
+        ].map(item => (
+          <button 
+            key={item.id}
+            onClick={() => { setContextType(item.id as ContextType); setActiveTab('analyze'); clearInput(); }}
+            className={`bg-white p-7 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 ${item.color} hover:shadow-xl transition-all text-left group`}
+          >
+            <div className="w-14 h-14 bg-slate-50 text-slate-800 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">{item.icon}</div>
+            <div>
+              <div className="text-3xl font-black text-slate-800">{item.count}</div>
+              <div className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-1">{item.label}</div>
+              <p className="text-xs text-slate-400 mt-2">{item.desc}</p>
+            </div>
+          </button>
+        ))}
       </div>
 
       <div className="space-y-6">
         <h3 className="text-xl font-bold text-slate-800">Quick Test Scenarios</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <button 
-            onClick={() => handleQuickAction("Bank account will be frozen if KYC not submitted by month end.", "Personal")}
+            onClick={() => handleQuickAction("Bank notice: KYC pending for account ending in 1234. Needs Aadhaar update.", "Personal")}
             className="p-6 bg-white border border-slate-200 rounded-2xl hover:border-blue-500 hover:shadow-lg transition-all text-left border-l-4 border-l-amber-500"
           >
-            <div className="text-3xl mb-3">🏦</div>
-            <div className="font-bold text-slate-800">Bank Notice</div>
+            <div className="text-2xl mb-2">🏦</div>
+            <div className="font-bold text-slate-800">Test Bank Notice</div>
           </button>
           <button 
-            onClick={() => handleQuickAction("Applying for a Senior role with 5 years experience in React.", "Career")}
+            onClick={() => handleQuickAction("Reviewing my resume for a Senior DevOps position. I know AWS but not Kubernetes.", "Career")}
             className="p-6 bg-white border border-slate-200 rounded-2xl hover:border-blue-500 hover:shadow-lg transition-all text-left border-l-4 border-l-emerald-500"
           >
-            <div className="text-3xl mb-3">📄</div>
-            <div className="font-bold text-slate-800">Resume Analysis</div>
+            <div className="text-2xl mb-2">💻</div>
+            <div className="font-bold text-slate-800">Test Career Gap</div>
           </button>
           <button 
-            onClick={() => handleQuickAction("Client wants a 30% discount on a contract. How to respond?", "Business")}
+            onClick={() => handleQuickAction("Vendor is asking for a 15% price hike on raw materials. How to negotiate?", "Business")}
             className="p-6 bg-white border border-slate-200 rounded-2xl hover:border-blue-500 hover:shadow-lg transition-all text-left border-l-4 border-l-blue-500"
           >
-            <div className="text-3xl mb-3">🤝</div>
-            <div className="font-bold text-slate-800">Negotiation Strategy</div>
+            <div className="text-2xl mb-2">🤝</div>
+            <div className="font-bold text-slate-800">Test Business Negotiation</div>
           </button>
         </div>
       </div>
@@ -159,15 +133,15 @@ const App: React.FC = () => {
   );
 
   const renderAnalyze = () => (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-4xl mx-auto pb-20">
       <section className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
         <div className="flex flex-wrap gap-6 mb-8">
-          <div className="flex-1 min-w-[240px]">
+          <div className="flex-1 min-w-[200px]">
             <label className="block text-xs font-black text-blue-600 uppercase mb-3 tracking-widest">Context</label>
             <select 
               value={contextType}
               onChange={(e) => setContextType(e.target.value as ContextType)}
-              className="w-full bg-blue-50 border-2 border-blue-400 rounded-2xl p-4 text-sm font-bold text-blue-900 outline-none"
+              className="w-full bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 text-sm font-bold text-blue-900 outline-none focus:border-blue-500 transition-colors cursor-pointer"
             >
               <option value="Personal">📄 Personal</option>
               <option value="Career">🌱 Career</option>
@@ -175,33 +149,104 @@ const App: React.FC = () => {
               <option value="General">🔍 General</option>
             </select>
           </div>
-          <div className="flex-1 min-w-[240px]">
+          <div className="flex-1 min-w-[200px]">
             <label className="block text-xs font-black text-slate-400 uppercase mb-3 tracking-widest">Language</label>
             <LanguageSelector selected={language} onSelect={setLanguage} />
           </div>
         </div>
 
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Describe your situation or document here..."
-          className="w-full min-h-[220px] p-6 text-slate-700 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all resize-none shadow-inner"
-        />
+        <div className="relative">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Paste document text or describe your situation here..."
+            className="w-full min-h-[200px] p-6 text-slate-700 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all resize-none shadow-inner text-lg"
+          />
+          <div className="absolute bottom-4 right-4">
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => setImagePreview(reader.result as string);
+                reader.readAsDataURL(file);
+              }
+            }} />
+            <button onClick={() => fileInputRef.current?.click()} className="p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 text-xl" title="Upload Document Photo">📷</button>
+          </div>
+        </div>
+
+        {imagePreview && (
+          <div className="mt-4 p-2 bg-slate-100 rounded-xl flex items-center gap-3 w-fit pr-4">
+            <img src={imagePreview} className="w-12 h-12 object-cover rounded-lg" />
+            <span className="text-xs font-bold text-slate-500">Document Image Attached</span>
+            <button onClick={() => setImagePreview(null)} className="text-red-500 font-bold hover:scale-110 transition-transform">✕</button>
+          </div>
+        )}
 
         <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-slate-100">
-          <button onClick={clearInput} className="px-8 py-3 text-slate-500 font-bold">Reset</button>
+          <button onClick={clearInput} className="px-8 py-3 text-slate-500 font-bold hover:text-slate-800">Reset</button>
           <button
             onClick={() => triggerAnalysis()}
             disabled={isLoading || (!input.trim() && !imagePreview)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3 rounded-2xl font-bold disabled:opacity-50"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3 rounded-2xl font-bold disabled:opacity-50 shadow-xl shadow-blue-600/20 active:scale-95 transition-all"
           >
-            {isLoading ? 'Processing...' : 'Analyze'}
+            {isLoading ? 'Thinking...' : 'Analyze Now'}
           </button>
         </div>
       </section>
 
-      {error && <div className="p-6 bg-red-50 text-red-700 rounded-2xl">{error}</div>}
+      {error && <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl font-medium animate-bounce">⚠️ {error}</div>}
       {currentInsight && <InsightCard insight={currentInsight} />}
+    </div>
+  );
+
+  const renderHistory = () => (
+    <div className="space-y-6 animate-in fade-in duration-500">
+       <div className="flex items-center justify-between mb-4">
+         <h3 className="text-2xl font-bold text-slate-800">History</h3>
+         <button onClick={() => setHistory([])} className="text-sm font-bold text-red-400 hover:text-red-600">Clear All</button>
+       </div>
+       {history.length === 0 ? (
+         <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 text-slate-400">
+           No analysis history yet.
+         </div>
+       ) : (
+         <div className="grid gap-4">
+           {history.map(item => (
+             <div key={item.id} className="p-6 bg-white border border-slate-200 rounded-2xl flex justify-between items-center hover:border-blue-500 transition-colors">
+                <div>
+                  <div className="text-[10px] font-black text-blue-600 uppercase mb-1">{item.response.context}</div>
+                  <div className="font-bold text-slate-800 truncate max-w-md">{item.input}</div>
+                  <div className="text-xs text-slate-400 mt-1">{new Date(item.timestamp).toLocaleString()}</div>
+                </div>
+                <button onClick={() => { setCurrentInsight(item.response); setActiveTab('analyze'); }} className="bg-slate-50 px-6 py-2 rounded-xl text-blue-600 font-bold text-sm hover:bg-blue-600 hover:text-white transition-all">Review</button>
+             </div>
+           ))}
+         </div>
+       )}
+    </div>
+  );
+
+  const renderResources = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
+      <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm space-y-4">
+        <div className="text-3xl">📘</div>
+        <h4 className="text-xl font-bold text-slate-800">Govt Scheme Guide</h4>
+        <p className="text-slate-500 text-sm">Understand MSME, Aadhaar updates, and insurance policies.</p>
+        <button className="text-blue-600 font-bold text-sm hover:underline">Read More →</button>
+      </div>
+      <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm space-y-4">
+        <div className="text-3xl">👔</div>
+        <h4 className="text-xl font-bold text-slate-800">Career Templates</h4>
+        <p className="text-slate-500 text-sm">Download high-impact resumes and email scripts.</p>
+        <button className="text-blue-600 font-bold text-sm hover:underline">Browse Library →</button>
+      </div>
+      <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm space-y-4">
+        <div className="text-3xl">💹</div>
+        <h4 className="text-xl font-bold text-slate-800">Business Strategy</h4>
+        <p className="text-slate-500 text-sm">Learn negotiation tactics and cashflow management.</p>
+        <button className="text-blue-600 font-bold text-sm hover:underline">Explore Tips →</button>
+      </div>
     </div>
   );
 
@@ -218,18 +263,34 @@ const App: React.FC = () => {
         <main className="flex-1 p-6 md:p-12 max-w-7xl mx-auto w-full overflow-y-auto">
           {activeTab === 'dashboard' && renderDashboard()}
           {activeTab === 'analyze' && renderAnalyze()}
-          {activeTab === 'history' && (
-            <div className="space-y-6">
-               <h3 className="text-2xl font-bold">History</h3>
-               {history.map(item => (
-                 <div key={item.id} className="p-6 bg-white border rounded-2xl flex justify-between items-center">
-                    <div>
-                      <div className="text-xs font-bold text-blue-600 uppercase mb-1">{item.response.context}</div>
-                      <div className="font-bold">{item.input}</div>
-                    </div>
-                    <button onClick={() => { setCurrentInsight(item.response); setActiveTab('analyze'); }} className="text-blue-600 font-bold">View</button>
-                 </div>
-               ))}
+          {activeTab === 'history' && renderHistory()}
+          {activeTab === 'resources' && renderResources()}
+          {activeTab === 'settings' && (
+            <div className="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 max-w-xl">
+              <h3 className="text-2xl font-black mb-8">Settings</h3>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Primary Language</label>
+                  <LanguageSelector selected={language} onSelect={setLanguage} />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                  <span className="font-bold text-slate-700">Dark Mode</span>
+                  <div className="w-12 h-6 bg-slate-300 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+          )}
+          {activeTab === 'help' && (
+            <div className="space-y-6 max-w-3xl">
+              <h3 className="text-3xl font-black mb-8">Help Center</h3>
+              <details className="p-6 bg-white border rounded-2xl group cursor-pointer">
+                <summary className="font-bold text-slate-800 flex justify-between">How do I analyze a bank notice? <span className="text-slate-300">▼</span></summary>
+                <p className="mt-4 text-slate-500">Go to the Analyze tab, select 'Personal' context, and either paste the text or upload a clear photo of the letter.</p>
+              </details>
+              <details className="p-6 bg-white border rounded-2xl group cursor-pointer">
+                <summary className="font-bold text-slate-800 flex justify-between">Is my data safe? <span className="text-slate-300">▼</span></summary>
+                <p className="mt-4 text-slate-500">InsightAI uses the Gemini API for temporary processing. We do not store your private documents on our servers permanently.</p>
+              </details>
             </div>
           )}
         </main>

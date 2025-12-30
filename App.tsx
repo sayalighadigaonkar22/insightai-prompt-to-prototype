@@ -1,32 +1,14 @@
 
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Header, Sidebar } from './components/Layout';
 import { LanguageSelector } from './components/LanguageSelector';
 import { InsightCard } from './components/InsightCard';
 import { generateInsight } from './services/geminiService';
 import { Language, InsightResponse, HistoryItem, AppTab, ContextType } from './services/types';
 
-/**
- * Define AIStudio interface to match the environment's expected type.
- * This resolves the "Subsequent property declarations must have the same type" error.
- */
-interface AIStudio {
-  hasSelectedApiKey: () => Promise<boolean>;
-  openSelectKey: () => Promise<void>;
-}
-
-// Extend Window interface for aistudio tools with the correct modifiers and type name
-declare global {
-  interface Window {
-    readonly aistudio: AIStudio;
-  }
-}
-
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [hasCheckedKey, setHasCheckedKey] = useState(false);
-  const [isKeySelected, setIsKeySelected] = useState(false);
   
   // Analyzer state
   const [input, setInput] = useState('');
@@ -39,45 +21,6 @@ const App: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Check for API key on mount
-  useEffect(() => {
-    const checkKey = async () => {
-      // First check if process.env.API_KEY is already available (e.g. from build injection)
-      if (process.env.API_KEY && process.env.API_KEY !== 'undefined') {
-        setIsKeySelected(true);
-        setHasCheckedKey(true);
-        return;
-      }
-
-      // Otherwise, check if a key has been selected via the AI Studio dialog
-      try {
-        if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
-          const selected = await window.aistudio.hasSelectedApiKey();
-          setIsKeySelected(selected);
-        }
-      } catch (e) {
-        console.warn("AI Studio key check failed", e);
-      } finally {
-        setHasCheckedKey(true);
-      }
-    };
-    checkKey();
-  }, []);
-
-  const handleOpenKeySelector = async () => {
-    try {
-      if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
-        await window.aistudio.openSelectKey();
-        // Per instructions: assume success after triggering the dialog to avoid race conditions
-        setIsKeySelected(true);
-      } else {
-        setError("API Key Selection is not supported in this environment. Please set the API_KEY environment variable.");
-      }
-    } catch (e) {
-      setError("Failed to open the API key selector.");
-    }
-  };
 
   const stats = useMemo(() => ({
     personal: history.filter(h => h.response.context === 'Personal').length,
@@ -108,13 +51,7 @@ const App: React.FC = () => {
       };
       setHistory(prev => [newHistoryItem, ...prev.slice(0, 19)]);
     } catch (err: any) {
-      const errMsg = err.message || 'An unexpected error occurred.';
-      setError(errMsg);
-      
-      // Per instructions: reset key selection if entity not found
-      if (errMsg.includes("Requested entity was not found")) {
-        setIsKeySelected(false);
-      }
+      setError(err.message || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -132,37 +69,6 @@ const App: React.FC = () => {
     setCurrentInsight(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
-
-  // Setup Screen if key is missing
-  if (hasCheckedKey && !isKeySelected) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 text-center border border-slate-100">
-          <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-8 shadow-lg shadow-blue-200">IA</div>
-          <h1 className="text-3xl font-black text-slate-800 mb-4">Connect InsightAI</h1>
-          <p className="text-slate-500 mb-8 leading-relaxed">
-            To generate professional insights, you must connect a valid Gemini API key. 
-            Please use a key from a paid Google Cloud Project.
-          </p>
-          <button 
-            onClick={handleOpenKeySelector}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-2xl transition-all shadow-xl shadow-blue-100 active:scale-95 mb-4"
-          >
-            Connect API Key
-          </button>
-          <a 
-            href="https://ai.google.dev/gemini-api/docs/billing" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 font-semibold hover:underline"
-          >
-            Learn more about billing & keys
-          </a>
-          {error && <div className="mt-6 p-4 bg-red-50 text-red-600 rounded-xl text-xs font-medium border border-red-100">{error}</div>}
-        </div>
-      </div>
-    );
-  }
 
   const renderDashboard = () => (
     <div className="space-y-10 animate-in fade-in duration-500">
@@ -296,12 +202,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-['Inter']">
-      {!hasCheckedKey && (
-        <div className="fixed inset-0 bg-white z-[100] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
-        </div>
-      )}
-      
       <Header setActiveTab={setActiveTab} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar 
@@ -353,14 +253,7 @@ const App: React.FC = () => {
                   <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Primary Language</label>
                   <LanguageSelector selected={language} onSelect={setLanguage} />
                 </div>
-                <div className="pt-6 border-t border-slate-100 flex flex-col gap-4">
-                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">API Connection</label>
-                  <button 
-                    onClick={handleOpenKeySelector}
-                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl transition-all text-sm"
-                  >
-                    Reconnect API Key
-                  </button>
+                <div className="pt-6 border-t border-slate-100">
                   <p className="text-xs text-slate-400">Application Version 1.1.0</p>
                 </div>
               </div>

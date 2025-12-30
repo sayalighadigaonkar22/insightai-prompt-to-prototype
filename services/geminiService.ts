@@ -14,16 +14,8 @@ export const generateInsight = async (
   language: Language,
   imageBase64?: string
 ): Promise<InsightResponse> => {
-  const apiKey = process.env.API_KEY;
-
-  if (!apiKey || apiKey === "undefined" || apiKey === "") {
-    throw new Error(
-      "API Key is missing. Please select a key via the Connect API Key button."
-    );
-  }
-
-  // Per instructions: Create a new GoogleGenAI instance right before making an API call
-  const ai = new GoogleGenAI({ apiKey });
+  // Directly use the environment variable as per instructions
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const systemInstruction = `
     You are InsightAI, a professional assistant for personal, career, and business guidance.
@@ -77,16 +69,6 @@ export const generateInsight = async (
     return JSON.parse(text) as InsightResponse;
   } catch (err: any) {
     console.error("Gemini API Error:", err);
-    
-    // Check for specific error that requires re-authentication per instructions
-    if (err.message?.includes("Requested entity was not found")) {
-      throw new Error("Requested entity was not found. Please try re-connecting your API key.");
-    }
-    
-    if (err.message?.includes("API key not valid")) {
-      throw new Error("The provided API key is invalid. Please select a different one.");
-    }
-
     throw new Error(err.message || "Failed to connect to the AI service. Please try again later.");
   }
 };

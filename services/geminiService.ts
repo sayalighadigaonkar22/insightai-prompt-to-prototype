@@ -7,8 +7,17 @@ export const generateInsight = async (
   language: Language,
   imageBase64?: string
 ): Promise<InsightResponse> => {
-  // Always use this specific initialization pattern for the SDK
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+
+  // Validation check before initializing the SDK to avoid the generic browser error
+  if (!apiKey || apiKey === "undefined" || apiKey === "") {
+    throw new Error(
+      "API Key is missing. If you are seeing this on a deployed site, ensure the API_KEY environment variable is correctly exposed to the client."
+    );
+  }
+
+  // Initialize the SDK with the verified key
+  const ai = new GoogleGenAI({ apiKey });
   
   const systemInstruction = `
     You are InsightAI, a professional assistant for personal, career, and business guidance.
@@ -34,34 +43,38 @@ export const generateInsight = async (
     });
   }
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: { parts },
-    config: {
-      systemInstruction,
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          context: { type: Type.STRING, description: "The categorized context of the query" },
-          understand: { type: Type.STRING, description: "Summary and key details" },
-          grow: { type: Type.STRING, description: "Improvements and gaps" },
-          act: { type: Type.STRING, description: "Actionable steps" },
-        },
-        required: ["context", "understand", "grow", "act"],
-      },
-    },
-  });
-
-  const text = response.text;
-  if (!text) {
-    throw new Error("The AI model returned an empty response. Please try a different query.");
-  }
-
   try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: { parts },
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            context: { type: Type.STRING, description: "The categorized context of the query" },
+            understand: { type: Type.STRING, description: "Summary and key details" },
+            grow: { type: Type.STRING, description: "Improvements and gaps" },
+            act: { type: Type.STRING, description: "Actionable steps" },
+          },
+          required: ["context", "understand", "grow", "act"],
+        },
+      },
+    });
+
+    const text = response.text;
+    if (!text) {
+      throw new Error("The AI model returned an empty response.");
+    }
+
     return JSON.parse(text) as InsightResponse;
-  } catch (e) {
-    console.error("Parse Error:", text);
-    throw new Error("Failed to process the AI insight. Please try again.");
+  } catch (err: any) {
+    console.error("Gemini API Error:", err);
+    // Handle specific common API errors
+    if (err.message?.includes("API key not valid")) {
+      throw new Error("The provided API key is invalid. Please check your configuration.");
+    }
+    throw new Error(err.message || "Failed to connect to the AI service. Please try again later.");
   }
 };

@@ -7,7 +7,7 @@ export const generateInsight = async (
   language: Language,
   imageBase64?: string
 ): Promise<InsightResponse> => {
-  // Use the pre-configured environment variable directly
+  // Always use this specific initialization pattern for the SDK
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const systemInstruction = `
@@ -23,10 +23,10 @@ export const generateInsight = async (
     4. TONE: Professional and clear.
   `;
 
-  const contents: any[] = [{ text: input }];
+  const parts: any[] = [{ text: input }];
   
   if (imageBase64) {
-    contents.push({
+    parts.push({
       inlineData: {
         mimeType: "image/jpeg",
         data: imageBase64
@@ -36,31 +36,32 @@ export const generateInsight = async (
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: { parts: contents },
+    contents: { parts },
     config: {
       systemInstruction,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
         properties: {
-          context: { type: Type.STRING },
-          understand: { type: Type.STRING },
-          grow: { type: Type.STRING },
-          act: { type: Type.STRING },
+          context: { type: Type.STRING, description: "The categorized context of the query" },
+          understand: { type: Type.STRING, description: "Summary and key details" },
+          grow: { type: Type.STRING, description: "Improvements and gaps" },
+          act: { type: Type.STRING, description: "Actionable steps" },
         },
         required: ["context", "understand", "grow", "act"],
       },
     },
   });
 
-  if (!response.text) {
-    throw new Error("Empty response from AI engine.");
+  const text = response.text;
+  if (!text) {
+    throw new Error("The AI model returned an empty response. Please try a different query.");
   }
 
   try {
-    return JSON.parse(response.text) as InsightResponse;
+    return JSON.parse(text) as InsightResponse;
   } catch (e) {
-    console.error("Failed to parse AI response", response.text);
-    throw new Error("Invalid response format from AI.");
+    console.error("Parse Error:", text);
+    throw new Error("Failed to process the AI insight. Please try again.");
   }
 };

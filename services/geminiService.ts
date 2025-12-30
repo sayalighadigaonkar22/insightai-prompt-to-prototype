@@ -7,6 +7,7 @@ export const generateInsight = async (
   language: Language,
   imageBase64?: string
 ): Promise<InsightResponse> => {
+  // Use the pre-configured environment variable directly
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const systemInstruction = `
@@ -52,5 +53,14 @@ export const generateInsight = async (
     },
   });
 
-  return JSON.parse(response.text) as InsightResponse;
+  if (!response.text) {
+    throw new Error("Empty response from AI engine.");
+  }
+
+  try {
+    return JSON.parse(response.text) as InsightResponse;
+  } catch (e) {
+    console.error("Failed to parse AI response", response.text);
+    throw new Error("Invalid response format from AI.");
+  }
 };

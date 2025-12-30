@@ -51,7 +51,7 @@ const App: React.FC = () => {
       };
       setHistory(prev => [newHistoryItem, ...prev.slice(0, 19)]);
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.');
+      setError(err.message || 'An unexpected error occurred. Please check your API configuration.');
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +77,7 @@ const App: React.FC = () => {
         <div className="relative z-10">
           <h2 className="text-4xl font-extrabold mb-3 text-balance">Professional Intelligence. Simplified.</h2>
           <p className="opacity-80 max-w-xl text-lg leading-relaxed font-light">
-            Insights for personal paperwork, career trajectories, and business strategy.
+            AI-powered insights for personal paperwork, career trajectories, and business strategy.
           </p>
         </div>
       </div>
@@ -195,58 +195,8 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {error && <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl font-medium animate-bounce">⚠️ {error}</div>}
+      {error && <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl font-medium animate-shake">⚠️ {error}</div>}
       {currentInsight && <InsightCard insight={currentInsight} />}
-    </div>
-  );
-
-  const renderHistory = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-       <div className="flex items-center justify-between mb-4">
-         <h3 className="text-2xl font-bold text-slate-800">History</h3>
-         <button onClick={() => setHistory([])} className="text-sm font-bold text-red-400 hover:text-red-600">Clear All</button>
-       </div>
-       {history.length === 0 ? (
-         <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 text-slate-400">
-           No analysis history yet.
-         </div>
-       ) : (
-         <div className="grid gap-4">
-           {history.map(item => (
-             <div key={item.id} className="p-6 bg-white border border-slate-200 rounded-2xl flex justify-between items-center hover:border-blue-500 transition-colors">
-                <div>
-                  <div className="text-[10px] font-black text-blue-600 uppercase mb-1">{item.response.context}</div>
-                  <div className="font-bold text-slate-800 truncate max-w-md">{item.input}</div>
-                  <div className="text-xs text-slate-400 mt-1">{new Date(item.timestamp).toLocaleString()}</div>
-                </div>
-                <button onClick={() => { setCurrentInsight(item.response); setActiveTab('analyze'); }} className="bg-slate-50 px-6 py-2 rounded-xl text-blue-600 font-bold text-sm hover:bg-blue-600 hover:text-white transition-all">Review</button>
-             </div>
-           ))}
-         </div>
-       )}
-    </div>
-  );
-
-  const renderResources = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
-      <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm space-y-4">
-        <div className="text-3xl">📘</div>
-        <h4 className="text-xl font-bold text-slate-800">Govt Scheme Guide</h4>
-        <p className="text-slate-500 text-sm">Understand MSME, Aadhaar updates, and insurance policies.</p>
-        <button className="text-blue-600 font-bold text-sm hover:underline">Read More →</button>
-      </div>
-      <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm space-y-4">
-        <div className="text-3xl">👔</div>
-        <h4 className="text-xl font-bold text-slate-800">Career Templates</h4>
-        <p className="text-slate-500 text-sm">Download high-impact resumes and email scripts.</p>
-        <button className="text-blue-600 font-bold text-sm hover:underline">Browse Library →</button>
-      </div>
-      <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm space-y-4">
-        <div className="text-3xl">💹</div>
-        <h4 className="text-xl font-bold text-slate-800">Business Strategy</h4>
-        <p className="text-slate-500 text-sm">Learn negotiation tactics and cashflow management.</p>
-        <button className="text-blue-600 font-bold text-sm hover:underline">Explore Tips →</button>
-      </div>
     </div>
   );
 
@@ -263,8 +213,38 @@ const App: React.FC = () => {
         <main className="flex-1 p-6 md:p-12 max-w-7xl mx-auto w-full overflow-y-auto">
           {activeTab === 'dashboard' && renderDashboard()}
           {activeTab === 'analyze' && renderAnalyze()}
-          {activeTab === 'history' && renderHistory()}
-          {activeTab === 'resources' && renderResources()}
+          {activeTab === 'history' && (
+            <div className="space-y-6">
+              <h3 className="text-2xl font-bold">History</h3>
+              {history.length === 0 ? (
+                <div className="text-center py-20 bg-white rounded-3xl border border-dashed text-slate-400">No records found.</div>
+              ) : (
+                history.map(item => (
+                  <div key={item.id} className="p-6 bg-white border border-slate-200 rounded-2xl flex justify-between items-center">
+                    <div>
+                      <div className="text-[10px] font-black text-blue-600 uppercase mb-1">{item.response.context}</div>
+                      <div className="font-bold text-slate-800">{item.input}</div>
+                    </div>
+                    <button onClick={() => { setCurrentInsight(item.response); setActiveTab('analyze'); }} className="bg-slate-50 px-6 py-2 rounded-xl text-blue-600 font-bold text-sm">Review</button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+          {activeTab === 'resources' && (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
+                <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                  <div className="text-3xl">📘</div>
+                  <h4 className="text-xl font-bold text-slate-800">Govt Scheme Guide</h4>
+                  <p className="text-slate-500 text-sm">Understand MSME, Aadhaar updates, and insurance policies.</p>
+                </div>
+                <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                  <div className="text-3xl">👔</div>
+                  <h4 className="text-xl font-bold text-slate-800">Career Templates</h4>
+                  <p className="text-slate-500 text-sm">Download high-impact resumes and email scripts.</p>
+                </div>
+             </div>
+          )}
           {activeTab === 'settings' && (
             <div className="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 max-w-xl">
               <h3 className="text-2xl font-black mb-8">Settings</h3>
@@ -273,9 +253,8 @@ const App: React.FC = () => {
                   <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Primary Language</label>
                   <LanguageSelector selected={language} onSelect={setLanguage} />
                 </div>
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                  <span className="font-bold text-slate-700">Dark Mode</span>
-                  <div className="w-12 h-6 bg-slate-300 rounded-full"></div>
+                <div className="pt-6 border-t border-slate-100">
+                  <p className="text-xs text-slate-400">Application Version 1.0.2</p>
                 </div>
               </div>
             </div>
@@ -283,13 +262,13 @@ const App: React.FC = () => {
           {activeTab === 'help' && (
             <div className="space-y-6 max-w-3xl">
               <h3 className="text-3xl font-black mb-8">Help Center</h3>
-              <details className="p-6 bg-white border rounded-2xl group cursor-pointer">
-                <summary className="font-bold text-slate-800 flex justify-between">How do I analyze a bank notice? <span className="text-slate-300">▼</span></summary>
-                <p className="mt-4 text-slate-500">Go to the Analyze tab, select 'Personal' context, and either paste the text or upload a clear photo of the letter.</p>
+              <details className="p-6 bg-white border rounded-2xl group cursor-pointer" open>
+                <summary className="font-bold text-slate-800 flex justify-between">How do I analyze a document? <span className="text-slate-300">▼</span></summary>
+                <p className="mt-4 text-slate-500">Go to 'Analyze', choose your context (e.g., Personal), and paste the text or upload a photo of the document.</p>
               </details>
               <details className="p-6 bg-white border rounded-2xl group cursor-pointer">
-                <summary className="font-bold text-slate-800 flex justify-between">Is my data safe? <span className="text-slate-300">▼</span></summary>
-                <p className="mt-4 text-slate-500">InsightAI uses the Gemini API for temporary processing. We do not store your private documents on our servers permanently.</p>
+                <summary className="font-bold text-slate-800 flex justify-between">What is 'Understand, Grow, Act'? <span className="text-slate-300">▼</span></summary>
+                <p className="mt-4 text-slate-500">It is our framework for analysis. We help you <b>Understand</b> the current facts, identify how you can <b>Grow</b> or improve your situation, and provide clear steps to <b>Act</b>.</p>
               </details>
             </div>
           )}

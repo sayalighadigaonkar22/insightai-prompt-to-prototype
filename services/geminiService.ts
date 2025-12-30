@@ -2,6 +2,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { InsightResponse, Language } from "./types";
 
+/**
+ * Generates an insight using the Gemini API.
+ * 
+ * Rules:
+ * - Always initialize GoogleGenAI with { apiKey: process.env.API_KEY }.
+ * - Initialize a new instance for every call to ensure the latest key is used.
+ */
 export const generateInsight = async (
   input: string, 
   language: Language,
@@ -9,30 +16,29 @@ export const generateInsight = async (
 ): Promise<InsightResponse> => {
   const apiKey = process.env.API_KEY;
 
-  // Validation check before initializing the SDK to avoid the generic browser error
   if (!apiKey || apiKey === "undefined" || apiKey === "") {
     throw new Error(
-      "API Key is missing. If you are seeing this on a deployed site, ensure the API_KEY environment variable is correctly exposed to the client."
+      "API Key is missing. Please select a key via the Connect API Key button."
     );
   }
 
-  // Initialize the SDK with the verified key
+  // Per instructions: Create a new GoogleGenAI instance right before making an API call
   const ai = new GoogleGenAI({ apiKey });
   
   const systemInstruction = `
     You are InsightAI, a professional assistant for personal, career, and business guidance.
-    Your task is to provide intelligent, structured guidance.
+    Your task is to provide intelligent, structured guidance based on documents or queries provided by the user.
     
     1. Identify context: Personal, Career, Business, or General.
-    2. LANGUAGE RULE: ALWAYS respond in ${language}.
+    2. LANGUAGE RULE: ALWAYS respond in ${language}. Use native vocabulary but maintain professional clarity.
     3. STRUCTURE: You must provide output in three specific sections:
-       - Understand: Summarize the input and highlight important details.
-       - Grow: Suggest improvements or skill gaps.
-       - Act: Suggest actionable steps.
-    4. TONE: Professional and clear.
+       - Understand: Summarize the input, identify key facts, and clarify ambiguities.
+       - Grow: Suggest areas for improvement, skill gaps, or long-term benefits.
+       - Act: Provide a clear, numbered list of actionable steps for the user to take immediately.
+    4. TONE: Professional, supportive, and direct.
   `;
 
-  const parts: any[] = [{ text: input }];
+  const parts: any[] = [{ text: input || "Analyze the provided information/image." }];
   
   if (imageBase64) {
     parts.push({
@@ -53,7 +59,7 @@ export const generateInsight = async (
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            context: { type: Type.STRING, description: "The categorized context of the query" },
+            context: { type: Type.STRING, description: "The categorized context of the query (Personal, Career, Business, General)" },
             understand: { type: Type.STRING, description: "Summary and key details" },
             grow: { type: Type.STRING, description: "Improvements and gaps" },
             act: { type: Type.STRING, description: "Actionable steps" },
@@ -71,10 +77,16 @@ export const generateInsight = async (
     return JSON.parse(text) as InsightResponse;
   } catch (err: any) {
     console.error("Gemini API Error:", err);
-    // Handle specific common API errors
-    if (err.message?.includes("API key not valid")) {
-      throw new Error("The provided API key is invalid. Please check your configuration.");
+    
+    // Check for specific error that requires re-authentication per instructions
+    if (err.message?.includes("Requested entity was not found")) {
+      throw new Error("Requested entity was not found. Please try re-connecting your API key.");
     }
+    
+    if (err.message?.includes("API key not valid")) {
+      throw new Error("The provided API key is invalid. Please select a different one.");
+    }
+
     throw new Error(err.message || "Failed to connect to the AI service. Please try again later.");
   }
 };

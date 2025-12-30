@@ -182,15 +182,15 @@ const App: React.FC = () => {
               <select 
                 value={contextType}
                 onChange={(e) => setContextType(e.target.value as ContextType)}
-                className="w-full bg-blue-50/50 border-2 border-blue-100 rounded-2xl p-4 pr-12 text-sm font-bold text-blue-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all appearance-none cursor-pointer hover:bg-blue-50 shadow-sm"
+                className="w-full bg-blue-50 border-2 border-blue-400 rounded-2xl p-4 pr-12 text-sm font-bold text-blue-900 focus:border-blue-600 focus:ring-4 focus:ring-blue-100 outline-none transition-all appearance-none cursor-pointer hover:bg-blue-100 shadow-sm"
               >
                 <option value="Personal">📄 Personal / Paperwork</option>
                 <option value="Career">🌱 Career / Education</option>
                 <option value="Business">💡 Business / Work Decisions</option>
                 <option value="General">🔍 General Consultation</option>
               </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-blue-400 group-focus-within:text-blue-600 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-blue-600 group-focus-within:text-blue-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </div>
@@ -240,7 +240,7 @@ const App: React.FC = () => {
             <div className="text-xs text-slate-500 font-medium">Document attached</div>
             <button onClick={() => setImagePreview(null)} className="p-1 hover:bg-red-50 text-red-500 rounded-full transition-colors">
                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             </button>
           </div>

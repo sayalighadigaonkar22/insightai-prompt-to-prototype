@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { InsightResponse } from '../types';
+import { InsightResponse } from '../services/types';
 
 interface InsightCardProps {
   insight: InsightResponse;

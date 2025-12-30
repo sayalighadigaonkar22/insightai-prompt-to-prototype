@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Language } from '../types';
+import { Language } from '../services/types';
 
 interface LanguageSelectorProps {
   selected: Language;
